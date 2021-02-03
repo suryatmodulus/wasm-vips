@@ -154,7 +154,7 @@ VERSION_IMAGEQUANT=2.4.1    # https://github.com/lovell/libimagequant
 VERSION_CGIF=0.3.0          # https://github.com/dloebl/cgif
 VERSION_WEBP=1.2.4          # https://chromium.googlesource.com/webm/libwebp
 VERSION_TIFF=4.4.0          # https://gitlab.com/libtiff/libtiff
-VERSION_VIPS=e3289ad        # https://github.com/libvips/libvips
+VERSION_VIPS=9b06f07        # https://github.com/libvips/libvips
 
 # Remove patch version component
 without_patch() {
@@ -391,10 +391,10 @@ fi
   stage "Compiling vips"
   mkdir $DEPS/vips
   #curl -Ls https://github.com/libvips/libvips/releases/download/v$VERSION_VIPS/vips-$VERSION_VIPS.tar.gz | tar xzC $DEPS/vips --strip-components=1
-  curl -Ls https://github.com/libvips/libvips/archive/$VERSION_VIPS.tar.gz | tar xzC $DEPS/vips --strip-components=1
+  curl -Ls https://github.com/kleisauke/libvips/archive/$VERSION_VIPS.tar.gz | tar xzC $DEPS/vips --strip-components=1
   cd $DEPS/vips
   # Emscripten specific patches
-  curl -Ls https://github.com/libvips/libvips/compare/$VERSION_VIPS...kleisauke:wasm-vips-master.patch | patch -p1
+  curl -Ls https://github.com/kleisauke/libvips/compare/$VERSION_VIPS...kleisauke:wasm-vips-simd.patch | patch -p1
   # Disable building C++ bindings
   sed -i "/subdir('cplusplus')/d" meson.build
   # ... and man pages, gettext po files, tools, and (fuzz-)tests
@@ -403,7 +403,7 @@ fi
     -Ddeprecated=false -Dexamples=false -Dintrospection=false -Dauto_features=disabled ${ENABLE_MODULES:+-Dmodules=enabled} \
     -Dcgif=enabled -Dexif=enabled -Dimagequant=enabled -Djpeg=enabled ${ENABLE_JXL:+-Djpeg-xl=enabled} \
     -Djpeg-xl-module=enabled -Dlcms=enabled -Dspng=enabled -Dtiff=enabled -Dwebp=enabled -Dnsgif=true \
-    -Dppm=true -Danalyze=true -Dradiance=true
+    -Davx2=false ${DISABLE_SIMD:+-Dsse41=false}
   meson install -C _build --tag runtime,devel
   # Emscripten requires linking to side modules to find the necessary symbols to export
   module_dir=$(printf '%s\n' $TARGET/lib/vips-modules-* | sort -n | tail -1)
