@@ -73,12 +73,12 @@ if ("web" IN_LIST ENVIRONMENT)
 
     set_target_properties(${PROJECT_NAME}-web
             PROPERTIES
-                 RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
             )
     set_target_properties(${PROJECT_NAME}-web-es6
             PROPERTIES
-                 SUFFIX "-es6.js"
-                 RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+                SUFFIX "-es6.js"
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
             )
 
     target_link_libraries(${PROJECT_NAME}-web
@@ -92,6 +92,23 @@ if ("web" IN_LIST ENVIRONMENT)
 
     list(APPEND TARGETS ${PROJECT_NAME}-web ${PROJECT_NAME}-web-es6)
 endif()
+
+if ("cf" IN_LIST ENVIRONMENT)
+    add_executable(${PROJECT_NAME}-cf $<TARGET_OBJECTS:${PROJECT_NAME}>)
+
+    set_target_properties(${PROJECT_NAME}-cf
+            PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+            )
+
+    target_link_libraries(${PROJECT_NAME}-cf
+            PRIVATE
+                ${VIPS_STATIC_LDFLAGS}
+            )
+
+    list(APPEND TARGETS ${PROJECT_NAME}-cf)
+endif()
+
 
 set(MAIN_COMPILE_OPTIONS
         $<$<BOOL:${ENABLE_MODULES}>:-sMAIN_MODULE=2>
@@ -200,4 +217,25 @@ if ("web" IN_LIST ENVIRONMENT)
                 ${WEB_LINK_OPTIONS}
                 -sEXPORT_ES6
             )
+endif()
+
+if ("cf" IN_LIST ENVIRONMENT)
+    # Cloudflare workers:
+    # - disallows dynamic code execution and linking;
+    # - limits memory to 128 MB;
+    # - doesn't support `import.meta.url` (ES6 Module relative import feature);
+    # - doesn't support node:worker_threads, nor the Web Workers API;
+    # The last point is a deal-breaker; wasm-vips cannot operate without it.
+    set(CF_LINK_OPTIONS
+            -sENVIRONMENT=web,worker
+            -sEXPORT_ES6
+            -sUSE_ES6_IMPORT_META=0
+            -sDYNAMIC_EXECUTION=0
+            -sINITIAL_MEMORY=64MB
+            )
+
+    target_link_options(${PROJECT_NAME}-cf
+            PUBLIC
+                ${CF_LINK_OPTIONS}
+    )
 endif()

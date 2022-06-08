@@ -496,3 +496,13 @@ echo "============================================="
   module_dir=$(printf '%s\n' $TARGET/lib/vips-modules-* | sort -n | tail -1)
   [ -d "$module_dir" ] && cp $module_dir/* $SOURCE_DIR/lib/
 )
+[ "$ENVIRONMENT" != "cf" ] || (
+  # Ensure ENVIRONMENT_IS_WORKER == false
+  sed -i 's/"function"==typeof importScripts/false/' $SOURCE_DIR/lib/vips.js
+  # Ensure ENVIRONMENT_IS_WEB == true (`Atomics.wait` cannot be used on Cloudflare workers)
+  sed -i 's/"object"==typeof window/true/' $SOURCE_DIR/lib/vips.js
+  # `navigator.hardwareConcurrency` cannot be used
+  sed -i -e 's/navigator.hardwareConcurrency/1/g' $SOURCE_DIR/lib/vips.js
+  # Allow `vips.worker.js` to be imported as an ES6 module
+  sed -i 's/self.onmessage/export var onmessage/' $SOURCE_DIR/lib/vips.worker.js
+)
