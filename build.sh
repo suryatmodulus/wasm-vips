@@ -182,7 +182,7 @@ cd $(dirname $(which emcc))
 if [ "$RUNNING_IN_CONTAINER" = true ]; then
   # TODO(kleisauke): Discuss these patches upstream
   curl -Ls https://github.com/emscripten-core/emscripten/compare/3.1.28...kleisauke:wasm-vips-3.1.28.patch | patch -p1
-  #curl -Ls https://github.com/kleisauke/emscripten/commit/175ca0e305c3e652476cd7ad8516b5490420f6d3.patch | patch -p1
+  curl -Ls https://github.com/kleisauke/emscripten/commit/175ca0e305c3e652476cd7ad8516b5490420f6d3.patch | patch -p1
 
   # The system headers require to be reinstalled, as some of
   # them have been changed with the patches above
