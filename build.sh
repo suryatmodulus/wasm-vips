@@ -183,6 +183,7 @@ if [ "$RUNNING_IN_CONTAINER" = true ]; then
   # TODO(kleisauke): Discuss these patches upstream
   curl -Ls https://github.com/emscripten-core/emscripten/compare/3.1.28...kleisauke:wasm-vips-3.1.28.patch | patch -p1
   curl -Ls https://github.com/kleisauke/emscripten/commit/175ca0e305c3e652476cd7ad8516b5490420f6d3.patch | patch -p1
+  curl -Ls https://github.com/emscripten-core/emscripten/pull/18394.patch | patch -p1
 
   # The system headers require to be reinstalled, as some of
   # them have been changed with the patches above
@@ -430,11 +431,9 @@ fi
   sed -i 's/new Worker(\(new URL([^)]\+)\)/new Worker(\1,{type:"module"}/g' $SOURCE_DIR/lib/vips-es6.js
 
   # The produced binary should be the same across the different variants (sanity check)
-  # FIXME(kleisauke): -sMAIN_MODULE=2 appears to produce non-determinism binaries, perhaps this is similar to:
-  # https://github.com/emscripten-core/emscripten/issues/15706
   expected_sha256=$(sha256sum "$SOURCE_DIR/lib/vips.wasm" | awk '{ print $1 }')
   for file in vips-es6.wasm node-commonjs/vips.wasm node-es6/vips.wasm; do
-    echo "$expected_sha256 $SOURCE_DIR/lib/$file" | sha256sum --check || true
+    echo "$expected_sha256 $SOURCE_DIR/lib/$file" | sha256sum --check
     rm $SOURCE_DIR/lib/$file
   done
 
